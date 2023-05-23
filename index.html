@@ -7,6 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/reset.css">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/png" sizes="32x32" href="./images/favicon-32x32.png">
     <title>Gerador de senha</title>
 </head>
 
@@ -31,7 +32,7 @@
                 </div>
             </div>
             <div class="security-indicator">
-                <div id="security-indicator-bar" class="bar safe" style="width: 50%;"></div>
+                <div id="security-indicator-bar" class="bar"></div>
             </div>
         </section>
         <section class="box customize">
@@ -39,7 +40,8 @@
             <div class="actions">
                 <div class="password-length">
                     <p>Tamanho: <span id="password-length-text">16</span></p>
-                    <input type="range" name="password-length" id="password-length" value="16" min="4" max="64" class="slider">
+                    <input type="range" name="password-length" id="password-length" value="16" min="4" max="64"
+                        class="slider">
                 </div>
                 <div class="config">
                     <label class="checkbox-container">
@@ -60,15 +62,37 @@
                 </div>
             </div>
         </section>
-        <button id="copy-2">Copiar senha</button>
+        <div class="submit">
+            <button id="copy-2">Copiar senha</button>
+        </div>
     </main>
 
     <script>
         let passwordLength = 16;
         const inputElement = document.querySelector('#password');
+        const upperCaseCheckElement = document.querySelector('#uppercase-check');
+        const numberCheckElement = document.querySelector('#number-check');
+        const symbolCheckCheckElement = document.querySelector('#symbol-check');
+        const securityIndicatorBar = document.querySelector('#security-indicator-bar');
 
         function generatePassword() {
-            const chars = 'abcdefghjklmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ123456789?!@&*()[]';
+            let chars = 'abcdefghjklmnpqrstuvwxyz';
+
+            const upperCaseChars = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+            const numbersChars = '123456789';
+            const symbolsChars = '?!@&*()[]';
+
+            if (upperCaseCheckElement.checked) {
+                chars += upperCaseChars;
+            }
+
+            if (numberCheckElement.checked) {
+                chars += numbersChars;
+            }
+
+            if (symbolCheckCheckElement.checked) {
+                chars += symbolsChars;
+            }
 
             let password = '';
 
@@ -78,6 +102,58 @@
             }
 
             inputElement.value = password
+            calculateQuality();
+            calculateFontSize();
+        }
+
+        function calculateQuality() {
+            const percent = Math.round(passwordLength / 64) * 30 +
+                (upperCaseCheckElement.checked ? 10 : 0) +
+                (numberCheckElement.checked ? 25 : 0) +
+                (symbolCheckCheckElement.checked ? 35 : 0);
+
+
+            securityIndicatorBar.style.width = `${percent}%`;
+
+            if (percent >= 70) {
+                securityIndicatorBar.classList.remove('critical');
+                securityIndicatorBar.classList.remove('warning');
+                securityIndicatorBar.classList.add('safe');
+            } else if (percent > 50) {
+                securityIndicatorBar.classList.remove('critical');
+                securityIndicatorBar.classList.remove('safe');
+                securityIndicatorBar.classList.add('warning');
+            } else {
+                securityIndicatorBar.classList.remove('safe');
+                securityIndicatorBar.classList.remove('warning');
+                securityIndicatorBar.classList.add('critical');
+            }
+
+            if (percent >= 100) {
+                securityIndicatorBar.classList.add('completed');
+            } else {
+                securityIndicatorBar.classList.remove('completed');
+            }
+        }
+
+        function calculateFontSize() {
+            if (passwordLength > 45) {
+                inputElement.classList.remove('font-sm')
+                inputElement.classList.remove('font-xs')
+                inputElement.classList.add('font-xxs')
+            } else if (passwordLength > 32) {
+                inputElement.classList.remove('font-xxs')
+                inputElement.classList.remove('font-sm')
+                inputElement.classList.add('font-xs')
+            } else if (passwordLength > 22) {
+                inputElement.classList.remove('font-xxs')
+                inputElement.classList.remove('font-xs')
+                inputElement.classList.add('font-sm')
+            } else {
+                inputElement.classList.remove('font-xxs')
+                inputElement.classList.remove('font-xs')
+                inputElement.classList.remove('font-sm')
+            }
         }
 
         function copy() {
@@ -87,11 +163,17 @@
         const passwordLengthElement = document.querySelector('#password-length');
         passwordLengthElement.addEventListener('input', () => {
             passwordLength = passwordLengthElement.value;
+            document.querySelector('#password-length-text').innerHTML = passwordLength;
             generatePassword();
         });
 
+        upperCaseCheckElement.addEventListener('click', generatePassword);
+        numberCheckElement.addEventListener('click', generatePassword);
+        symbolCheckCheckElement.addEventListener('click', generatePassword);
+
         document.querySelector('#copy-1').addEventListener('click', copy);
         document.querySelector('#copy-2').addEventListener('click', copy);
+        document.querySelector('#renew').addEventListener('click', generatePassword);
 
         generatePassword();
     </script>
